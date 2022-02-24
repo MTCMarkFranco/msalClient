@@ -7,8 +7,8 @@
 
 # Overview 
 
-* How to Wire-up Authntication + Authorization for Public Client Application in C#
-* How to Wire-up Authntication + Authorization for Public Client Application in Powershell
+* How to Wire-up Authentication + Authorization for Public Client Application in C#
+* How to Wire-up Authentication + Authorization for Public Client Application in Powershell
 
 # Setup
 
