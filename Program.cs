@@ -1,12 +1,17 @@
 ﻿using Microsoft.Identity.Client;
 
-string[] scopes = new string[] { "api://9e5c0e54-2126-4242-9ccd-d07405d5c170/Weather.Read" };
-var app = PublicClientApplicationBuilder.Create("40ffedfe-faef-46a2-947c-5d64d2e7a50f")
-        .WithTenantId("d7037d74-e72d-44e9-8f94-c0b2b4845174")
+// Initialize
+AuthenticationResult result;
+
+// Get Token using MSAL with the proper Audience and Scope and using the Public Client Application in MSAL with Interactive Login (accommodates MFA and Conditional Access Policies)
+string[] scopes = new string[] { "api://<CLIENT_ID_OR_APP_FQDN>/Weather.Read" };
+var app = PublicClientApplicationBuilder.Create("<CLIENT_ID_OF_NATIVE_APP_REG>")
+        .WithTenantId("<TENANT_ID_OF_APP_REG>")
         .WithDefaultRedirectUri()
         .Build();
+
 var accounts = await app.GetAccountsAsync();
-AuthenticationResult result;
+
 try
 {
     result = await app.AcquireTokenSilent(scopes, accounts.FirstOrDefault())
@@ -18,8 +23,10 @@ catch (MsalUiRequiredException)
                 .ExecuteAsync();
 }
 
+// DEBUG
 Console.WriteLine(result.AccessToken);
 
+// Call our Protected Web API
 using (HttpClient httpClient = new HttpClient())
 {
     httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", result.AccessToken);
