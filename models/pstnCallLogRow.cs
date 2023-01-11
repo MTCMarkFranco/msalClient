@@ -2,11 +2,22 @@ using System.Text.Json.Serialization;
 
 namespace callRecords.Models
 {
-public class pstnCallLogRow
-    {
-        [JsonPropertyName("@odata.type")]
-        public string odatatype { get; set; }
 
+
+    public class PstnLogCallRows
+    {
+        [JsonPropertyName("@odata.context")]
+        public string odatacontext { get; set; }
+
+        [JsonPropertyName("@odata.count")]
+        public int odatacount { get; set; }
+
+        [JsonPropertyName("value")]
+        public List<PstnLogCallRow> pstnLogCallRow { get; set; }
+    }
+
+    public class PstnLogCallRow
+    {
         [JsonPropertyName("id")]
         public string id { get; set; }
 
@@ -23,16 +34,16 @@ public class pstnCallLogRow
         public string userDisplayName { get; set; }
 
         [JsonPropertyName("startDateTime")]
-        public string startDateTime { get; set; }
+        public DateTime startDateTime { get; set; }
 
         [JsonPropertyName("endDateTime")]
-        public string endDateTime { get; set; }
+        public DateTime endDateTime { get; set; }
 
         [JsonPropertyName("duration")]
-        public string duration { get; set; }
+        public int duration { get; set; }
 
         [JsonPropertyName("charge")]
-        public string charge { get; set; }
+        public int charge { get; set; }
 
         [JsonPropertyName("callType")]
         public string callType { get; set; }
@@ -50,7 +61,7 @@ public class pstnCallLogRow
         public string tenantCountryCode { get; set; }
 
         [JsonPropertyName("connectionCharge")]
-        public string connectionCharge { get; set; }
+        public int connectionCharge { get; set; }
 
         [JsonPropertyName("callerNumber")]
         public string callerNumber { get; set; }
@@ -62,7 +73,7 @@ public class pstnCallLogRow
         public string destinationName { get; set; }
 
         [JsonPropertyName("conferenceId")]
-        public string conferenceId { get; set; }
+        public object conferenceId { get; set; }
 
         [JsonPropertyName("licenseCapability")]
         public string licenseCapability { get; set; }
@@ -71,10 +82,11 @@ public class pstnCallLogRow
         public string inventoryType { get; set; }
 
         [JsonPropertyName("operator")]
-        public string @operator { get; set; }
+        public object @operator { get; set; }
 
         [JsonPropertyName("callDurationSource")]
         public string callDurationSource { get; set; }
     }
+
 
 }
