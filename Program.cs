@@ -21,16 +21,23 @@ catch (MsalUiRequiredException)
 }
 
 // DEBUG
-Console.WriteLine(result.AccessToken);
+//Console.WriteLine(result.AccessToken);
 
 using (HttpClient httpClient = new HttpClient())
 {
     httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", result.AccessToken);
 
-    var res = httpClient.GetAsync("https://graph.microsoft.com/v1.0/communications/callRecords/getPstnCalls(fromDateTime=2023-01-09,toDateTime=2023-01-11)").Result;
+    var res = httpClient.GetAsync("https://graph.microsoft.com/v1.0/communications/callRecords/getPstnCalls(fromDateTime=2022-12-30,toDateTime=2023-01-30)").Result;
 
-    Console.WriteLine(res.Content.ReadAsStringAsync().Result.ToString());
+    //Console.WriteLine(res.Content.ReadAsStringAsync().Result.ToString());
 
-    var callLogRows = JsonSerializer.Deserialize<pstnCallLogRow>(res.Content.ReadAsStringAsync().Result.ToString());
+    PstnLogCallRows callLogRows = JsonSerializer.Deserialize<PstnLogCallRows>(res.Content.ReadAsStringAsync().Result.ToString());
+
+    foreach (var calls in callLogRows.pstnLogCallRow)
+    {
+        Console.WriteLine(string.Format("Called: '{0}' : for '{1}' minutes",calls.calleeNumber,calls.duration / 60));
+    }
+    
+    
 
 }
