@@ -31,12 +31,26 @@ using (HttpClient httpClient = new HttpClient())
 
     //Console.WriteLine(res.Content.ReadAsStringAsync().Result.ToString());
 
-    PstnLogCallRows callLogRows = JsonSerializer.Deserialize<PstnLogCallRows>(res.Content.ReadAsStringAsync().Result.ToString());
-
-    foreach (var calls in callLogRows.pstnLogCallRow)
+    try
     {
-        Console.WriteLine(string.Format("Called: '{0}' : for '{1}' minutes",calls.calleeNumber,calls.duration / 60));
+        string jsonString = res.Content.ReadAsStringAsync().Result.ToString();
+        var callLogRows = JsonSerializer.Deserialize<PstnLogCallRows>(jsonString);
+
+        if (callLogRows != null)
+        {
+            foreach (var calls in callLogRows.pstnLogCallRow)
+            {
+                Console.WriteLine(string.Format("Called: {0:#-###-###-####} : for '{1}' minutes",Convert.ToInt64(calls.calleeNumber),calls.duration / 60));
+            }
+        }
+
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.Message);
+    }
+
+    
     
     
 
