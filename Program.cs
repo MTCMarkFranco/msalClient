@@ -22,36 +22,48 @@ catch (MsalUiRequiredException)
 
 // DEBUG
 //Console.WriteLine(result.AccessToken);
-
-using (HttpClient httpClient = new HttpClient())
+if (result != null)
 {
-    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", result.AccessToken);
-
-    var res = httpClient.GetAsync("https://graph.microsoft.com/v1.0/communications/callRecords/getPstnCalls(fromDateTime=2022-12-30,toDateTime=2023-01-30)").Result;
-
-    //Console.WriteLine(res.Content.ReadAsStringAsync().Result.ToString());
-
-    try
+    using (HttpClient httpClient = new HttpClient())
     {
-        string jsonString = res.Content.ReadAsStringAsync().Result.ToString();
-        var callLogRows = JsonSerializer.Deserialize<PstnLogCallRows>(jsonString);
+        httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", result.AccessToken);
+        var res = httpClient.GetAsync("https://graph.microsoft.com/v1.0/communications/callRecords/getPstnCalls(fromDateTime=2022-12-30,toDateTime=2023-01-30)").Result;
 
-        if (callLogRows != null)
+        //Console.WriteLine(res.Content.ReadAsStringAsync().Result.ToString());
+
+        try
         {
-            foreach (var calls in callLogRows.pstnLogCallRow)
+            string jsonString = res.Content.ReadAsStringAsync().Result.ToString();
+            PstnLogCallRows callLogRows = JsonSerializer.Deserialize<PstnLogCallRows>(jsonString);
+
+            if (callLogRows != null && callLogRows.pstnLogCallRow != null )
             {
-                Console.WriteLine(string.Format("Called: {0:#-###-###-####} : for '{1}' minutes",Convert.ToInt64(calls.calleeNumber),calls.duration / 60));
+                foreach (var calls in callLogRows.pstnLogCallRow)
+                {
+                    Console.ForegroundColor = (ConsoleColor)(new Random()).Next(0,14);
+                    Console.WriteLine(string.Format("Called: {0:#-###-###-####} : for '{1}' minutes",Convert.ToInt64(calls.calleeNumber),calls.duration / 60));
+                    Console.WriteLine(string.Format("charge: {0}",calls.charge));
+                    Console.WriteLine(string.Format("charge: {0}",calls.connectionCharge));
+                    Console.WriteLine(string.Format("currency: {0}",calls.currency));
+                    Console.WriteLine(string.Format("callType: {0}",calls.callType));
+                    Console.WriteLine(string.Format("startDateTime: {0}",calls.startDateTime));
+                    Console.WriteLine(string.Format("endDateTime: {0}",calls.endDateTime));
+                    Console.WriteLine(string.Format("userPrincipalName: {0}",calls.userPrincipalName));
+                    Console.WriteLine(string.Format("userDisplayName: {0}",calls.userDisplayName));
+                    Console.WriteLine(string.Format("userId: {0}",calls.userId));
+                    Console.WriteLine(string.Format("callId: {0}",calls.callId));
+                    Console.WriteLine(string.Format("id: {0}",calls.id));
+                    Console.WriteLine(string.Format("usageCountryCode: {0}",calls.usageCountryCode));
+                    Console.WriteLine(string.Format("tenantCountryCode: {0}",calls.tenantCountryCode));
+                    
+                }
             }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
         }
 
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine(ex.Message);
-    }
-
-    
-    
-    
-
 }
