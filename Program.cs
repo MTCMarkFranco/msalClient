@@ -33,8 +33,8 @@ if (result != null)
 
         try
         {
-            string jsonString = res.Content.ReadAsStringAsync().Result.ToString();
-            PstnLogCallRows callLogRows = JsonSerializer.Deserialize<PstnLogCallRows>(jsonString);
+            var jsonString = res.Content.ReadAsStringAsync().Result.ToString();
+            var callLogRows = JsonSerializer.Deserialize<PstnLogCallRows>(jsonString);
 
             if (callLogRows != null && callLogRows.pstnLogCallRow != null )
             {
