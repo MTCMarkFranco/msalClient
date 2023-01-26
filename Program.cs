@@ -37,12 +37,17 @@ if (result != null)
     using (HttpClient httpClient = new HttpClient())
     {
 
-        DateTime fromDateTime = new DateTime(DateTime.Now.Year,DateTime.Now.Month ,1); // beginging of this month
-        DateTime toDateTime = DateTime.Now + TimeSpan.FromDays(1); // inclusive till the end of day today
+        // Look for records from the start of the period(first of the month) to the end of the current day (11:59:59 PM)
+        DateTime fromDateTime = new DateTime(DateTime.Now.Year,DateTime.Now.Month ,1); // Beginging of this month
+        DateTime toDateTime = new DateTime(DateTime.Now.Year,DateTime.Now.Month ,DateTime.Now.Day,11,59,59); // End of Today
 
-        string url = string.Format("https://graph.microsoft.com/v1.0/communications/callRecords/getPstnCalls(fromDateTime={0},toDateTime={1})",fromDateTime.ToString("yyyy-MM-dd"),toDateTime.ToString("yyyy-MM-dd"));
+        // MS Graph Uri for the "getPstnCalls" API
+        string url = string.Format("https://graph.microsoft.com/v1.0/communications/callRecords/getPstnCalls(fromDateTime={0},toDateTime={1})",fromDateTime.ToString("yyyy-MM-ddThh:mm:ss.sssZ"),toDateTime.ToString("yyyy-MM-ddThh:mm:ss.sssZ"));
         
+        // Add Authorization Header
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", result.AccessToken);
+        
+        // Get the Call Records
         var res = httpClient.GetAsync(url).Result;
 
         try
