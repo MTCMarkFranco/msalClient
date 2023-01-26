@@ -11,6 +11,9 @@ namespace callRecords.Models
         [JsonPropertyName("@odata.count")]
         public int? odatacount { get; set; }
 
+        [JsonPropertyName("@odata.nextLink")]
+        public string? odatanextlink { get; set; }
+        
         [JsonPropertyName("value")]
         public List<PstnLogCallRow>? pstnLogCallRow { get; set; }
     }
