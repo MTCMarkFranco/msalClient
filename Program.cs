@@ -1,15 +1,24 @@
 ﻿using System.Text.Json;
 using Microsoft.Identity.Client;
 using callRecords.Models;
+using Microsoft.Extensions.Configuration;
 
 // Initialize
 AuthenticationResult? result = null;
 Dictionary<string,int> PlanUsageTotals = new Dictionary<string,int>(16);
 
+// Initialize Configuration object
+var builder = new ConfigurationBuilder()
+    .AddUserSecrets<Program>();
+
+var configurationRoot = builder.Build();
+
+var msalConfig = configurationRoot.GetSection("MSAL").Get<MSALConfig>();
+
 string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
-var app = ConfidentialClientApplicationBuilder.Create("f976c105-c8e4-4635-8ddf-e8acab8c7345")
-                                          .WithClientSecret("REMOVED")
-                                          .WithAuthority(new Uri("https://login.microsoftonline.com/b8ba91e8-4402-47de-9d97-12a0faaa0115"))
+var app = ConfidentialClientApplicationBuilder.Create(msalConfig.ClientID)
+                                          .WithClientSecret(msalConfig.ClientSecret)
+                                          .WithAuthority(new Uri(string.Format("https://login.microsoftonline.com/{0}", msalConfig.TenantID)))
                                           .Build();
 
 try
@@ -187,4 +196,11 @@ public class PlanDetails
 {
     public string planTypeFriendlyName { get; set; }
     public int planLimit { get; set; }
+}
+
+public  class MSALConfig
+{
+    public string ClientID { get; set; }
+    public string ClientSecret { get; set; }
+    public string TenantID {get; set; }
 }
