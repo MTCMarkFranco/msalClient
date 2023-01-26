@@ -8,11 +8,7 @@ Dictionary<string,int> PlanUsageTotals = new Dictionary<string,int>(16);
 
 string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
 var app = ConfidentialClientApplicationBuilder.Create("f976c105-c8e4-4635-8ddf-e8acab8c7345")
-<<<<<<< HEAD
                                           .WithClientSecret("REMOVED")
-=======
-                                          .WithClientSecret("Fzn8Q~JjY2iv33ZFAGikNwpfE0ht_uoT-flc2aoS")
->>>>>>> 98876db0fed0b387bb61acd93ef9678a857a1341
                                           .WithAuthority(new Uri("https://login.microsoftonline.com/b8ba91e8-4402-47de-9d97-12a0faaa0115"))
                                           .Build();
 
