@@ -4,6 +4,8 @@ using callRecords.Models;
 using Microsoft.Extensions.Configuration;
 
 // Initialize
+int row = 1;
+PlanDetails? planDetails = null;
 AuthenticationResult? result = null;
 Dictionary<string,int> PlanUsageTotals = new Dictionary<string,int>(16);
 
@@ -27,7 +29,7 @@ try
 }
 catch (MsalUiRequiredException)
 {
-    
+    // Do Nothing
 }
 
 if (result != null)
@@ -50,11 +52,10 @@ if (result != null)
 
             if (callLogRows != null && callLogRows.pstnLogCallRow != null )
             {
-                //int row = 1;
-                PlanDetails? planDetails = null;
+                // Step 1. Fill the PLanUsageTotals Dictionary with the plan details
                 foreach (var call in callLogRows.pstnLogCallRow)
                 {
-                    
+                    #region Get Plan Details for Debugging 
                     // Console.ForegroundColor = (ConsoleColor)(row++ % 14);
                     // Console.WriteLine(string.Format("Called: {0:#-###-###-####} : for '{1}' minutes",Convert.ToInt64(call.calleeNumber),call.duration / 60));
                     // Console.WriteLine(string.Format("charge: {0}",call.charge));
@@ -72,34 +73,30 @@ if (result != null)
                     // Console.WriteLine(string.Format("tenantCountryCode: {0}",call.tenantCountryCode));
                     // Console.WriteLine(string.Format("licenseCapability: {0}",call.licenseCapability));
                     // Console.WriteLine(string.Format("destinationContext: {0}",call.destinationContext));
+                    #endregion
                 
                     // Get the Current PLan Details and Limits
                     planDetails =  GetCurrentPlanTypeandLimits(call);
                    
-                    // Add the current call to the total for the plan type
+                    // Add the current call to the total for the plan type and Add to the PlanUsageTotals Dictionary
                     int totalcurrentCallTypePlan;
                     if (PlanUsageTotals.TryGetValue(planDetails.planTypeFriendlyName , out totalcurrentCallTypePlan))
                         PlanUsageTotals[planDetails.planTypeFriendlyName] = (int)(totalcurrentCallTypePlan + (call.duration / 60));
                     else
                         PlanUsageTotals.Add(planDetails.planTypeFriendlyName, (int)(call.duration / 60));
-                
                 }
-
                 
-                // loop through each keyvaluepari in PlanUsageTotals
-                // and determine if we are over the plan limit
-                int row = 0;
+                // Step 2. Output the Plan Usage Totals
+                // a. loop through PlanUsageTotals and Display Totals by licenseCapability
+                // b. Determine if we are under / over the plan limit
                 foreach (KeyValuePair<string, int> kvp in PlanUsageTotals)
                 {
                     Console.ForegroundColor = (ConsoleColor)(row++ % 14);
-
                     if (kvp.Value > planDetails.planLimit)
                         Console.WriteLine(string.Format("You are over the {0} limit of {1} minutes, with {2} minutes consumed for the period(month).", kvp.Key, planDetails.planLimit,kvp.Value));
                     else
                         Console.WriteLine(string.Format("You are under the {0} limit of {1} minutes, with {2} minutes consumed for the period(month).", kvp.Key, planDetails.planLimit,kvp.Value));
                 }
-                                
-
             }
 
         }
@@ -107,90 +104,58 @@ if (result != null)
         {
             Console.WriteLine(ex.Message);
         }
-
     }
 }
 
+/// <summary>
+/// Get the Current Plan Type and Limits
+/// </summary>
 PlanDetails GetCurrentPlanTypeandLimits(PstnLogCallRow call)
 {
     
    bool InSelectCountriesFlag = false;
    bool callIsDomestic = false;
-   
-        
-    // check if call.usageCountryCode has one of these values: "UK","US","PR","CA"
-    // if so, set InSelectCountriesFlag to true
-    if (call.usageCountryCode == "UK" || call.usageCountryCode == "US" || call.usageCountryCode == "PR" || call.usageCountryCode == "CA")
+           
+   // Check if call.usageCountryCode has one of these values: "UK","US","PR","CA"
+   if (call.usageCountryCode == "UK" || call.usageCountryCode == "US" || call.usageCountryCode == "PR" || call.usageCountryCode == "CA")
         InSelectCountriesFlag = true;
-    
    
-    // Check if they are using the domestic or international Minutes
-    if (call.destinationContext == "Domestic")
-	    callIsDomestic = true;
+   // Check if they are using the domestic or international Minutes
+   if (call.destinationContext == "Domestic")
+	   callIsDomestic = true;
        
     // Get the limit for the plan buckets (DOMESTIC_US_PR_CA_UK_OutBound_Limit,DOMESTIC_Other_OutBound_Limit,INTERNATIONAL_ALL_OutBound_Limit )
-     KeyValuePair<string,int> currentCallTypePlanLimit = getCurrentCallTypePlanLimitAndType(call.licenseCapability, callIsDomestic, InSelectCountriesFlag);
+    KeyValuePair<string,int> currentCallTypePlanLimit = getPlanLimitByLicenseCapability(call.licenseCapability, callIsDomestic, InSelectCountriesFlag);
 
-     return new PlanDetails { planTypeFriendlyName = currentCallTypePlanLimit.Key, planLimit = currentCallTypePlanLimit.Value};
+    // Return PLan Details
+    return new PlanDetails { planTypeFriendlyName = currentCallTypePlanLimit.Key, planLimit = currentCallTypePlanLimit.Value};
 }
 
-KeyValuePair<string,int> getCurrentCallTypePlanLimitAndType(string licenseCapability, bool callIsDomestic, bool inSelectCountriesFlag)
+/// <summary>
+/// Get the Plan Limit for the License Capability
+/// </summary>
+KeyValuePair<string,int> getPlanLimitByLicenseCapability(string licenseCapability, bool callIsDomestic, bool inSelectCountriesFlag)
 {
-            // return plan limit and type for the licenseCapability. plan limits are as follows:
-            // if licenseCapability == "MCOPSTN2" then
-            //   return PL_MCOPSTN2
+            // Deserialize plans.json to get the plan limits
+            string plansJson = File.ReadAllText("plans.json");
+            List<Plan> callingPlans = JsonSerializer.Deserialize<List<Plan>>(plansJson);
+                        
+            // linq query to get element in List<Plan> where Plan.LicenseCapability == licenseCapability
+            Plan plan = callingPlans.Where(p => p.LicenseCapability == licenseCapability).FirstOrDefault();
 
-            switch (licenseCapability)
+            if (callIsDomestic)
             {
-                case "MCOPSTN2":
-                {
-                    if (callIsDomestic)
-                    {
-                        if (inSelectCountriesFlag)
-                            return new KeyValuePair<string, int>("MCOPSTN2_DOMESTIC_US_PR_CA_UK_OutBound_Type", (int)PL_MCOPSTN2.DOMESTIC_US_PR_CA_UK_OutBound_Limit);
-                        else
-                            return new KeyValuePair<string, int>("MCOPSTN2_DOMESTIC_Other_OutBound_Type", (int)PL_MCOPSTN2.DOMESTIC_Other_OutBound_Limit);
-                    }
-                    else
-                       {
-                        return new KeyValuePair<string, int>("MCOPSTN2_INTERNATIONAL_ALL_OutBound_Type", (int)PL_MCOPSTN2.INTERNATIONAL_ALL_OutBound_Limit);
-                       }
-                 
-                }
-                case "MCOPSTN1":
-                {
-                    if (callIsDomestic)
-                    {
-                        if (inSelectCountriesFlag)
-                            return new KeyValuePair<string, int>("MCOPSTN1_DOMESTIC_US_PR_CA_UK_OutBound_Type", (int)PL_MCOPSTN1.DOMESTIC_US_PR_CA_UK_OutBound_Limit);
-                        else
-                            return new KeyValuePair<string, int>("MCOPSTN1_DOMESTIC_Other_OutBound_Type", (int)PL_MCOPSTN1.DOMESTIC_Other_OutBound_Limit);
-                    }
-                    else
-                    {
-                        return new KeyValuePair<string, int>("MCOPSTN1_INTERNATIONAL_ALL_OutBound_Type", (int)PL_MCOPSTN1.INTERNATIONAL_ALL_OutBound_Limit);
-                    }
-                }
-                default:
-                    return new KeyValuePair<string, int>("", 0);
+                if (inSelectCountriesFlag)
+                    return new KeyValuePair<string, int>(string.Format("{0}_DOMESTIC_US_PR_CA_UK_OutBound_Type",plan.LicenseCapability), (int)plan.DOMESTIC_US_PR_CA_UK_OutBound_Limit);
+                else
+                    return new KeyValuePair<string, int>(string.Format("{0}_DOMESTIC_Other_OutBound_Type",plan.LicenseCapability), (int)plan.DOMESTIC_Other_OutBound_Limit);
             }
-
+            else
+            {
+                return new KeyValuePair<string, int>(string.Format("{0}_INTERNATIONAL_ALL_OutBound_Type",plan.LicenseCapability), (int)plan.INTERNATIONAL_ALL_OutBound_Limit);
+            }
+            
 }
-// Plan Limits
-public enum PL_MCOPSTN2
-{
-    DOMESTIC_US_PR_CA_UK_OutBound_Limit = 3000,
-    DOMESTIC_Other_OutBound_Limit = 1200,
-    INTERNATIONAL_ALL_OutBound_Limit = 600
-}
-
-public enum PL_MCOPSTN1
-{
-    DOMESTIC_US_PR_CA_UK_OutBound_Limit = 3000,
-    DOMESTIC_Other_OutBound_Limit = 1200,
-    INTERNATIONAL_ALL_OutBound_Limit = 0
-}
-
 
 public class PlanDetails
 {

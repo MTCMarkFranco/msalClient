@@ -1,0 +1,15 @@
+[
+    { "licenseCapability":"MCOPSTN2",
+        "DOMESTIC_US_PR_CA_UK_OutBound_Limit":3000,
+        "DOMESTIC_Other_OutBound_Limit":1200,
+        "INTERNATIONAL_ALL_OutBound_Limit": 600
+
+    },
+    { "licenseCapability":"MCOPSTN1",
+        "DOMESTIC_US_PR_CA_UK_OutBound_Limit":3000,
+        "DOMESTIC_Other_OutBound_Limit":1200,
+        "INTERNATIONAL_ALL_OutBound_Limit": 0
+
+    }
+
+]
